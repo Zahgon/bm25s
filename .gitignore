@@ -186,3 +186,6 @@ test_index_mcp/
 
 # Pages build output
 _site/
+
+.aider*
+logs/
