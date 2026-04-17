@@ -32,7 +32,7 @@ except ImportError:
 
 
 def _faketqdm(*args, **kwargs):
-    return args[0] if len(args) > 0 else None
+    pass
 
 
 if os.environ.get("DISABLE_TQDM", False):
@@ -82,20 +82,13 @@ class Results(NamedTuple):
         """
         Merge a list of Results objects into a single Results object.
         """
-        documents = np.concatenate([r.documents for r in results], axis=0)
-        scores = np.concatenate([r.scores for r in results], axis=0)
-        return cls(documents=documents, scores=scores)
+        pass
 
 
 def get_unique_tokens(
     corpus_tokens, show_progress=True, leave_progress=False, desc="Create Vocab"
 ):
-    unique_tokens = set()
-    for doc_tokens in tqdm(
-        corpus_tokens, desc=desc, disable=not show_progress, leave=leave_progress
-    ):
-        unique_tokens.update(doc_tokens)
-    return unique_tokens
+    pass
 
 
 def is_list_of_list_of_type(obj, type_=int):
@@ -246,25 +239,7 @@ class BM25:
         Verifies if the corpus is a list of list of strings, an object with the `ids` and `vocab` attributes,
         or a tuple of two lists: first is list of list of ids, second is the vocab dictionary.
         """
-        if hasattr(corpus, "ids") and hasattr(corpus, "vocab"):
-            return "object"
-        elif isinstance(corpus, tuple) and len(corpus) == 2:
-            c1, c2 = corpus
-            if isinstance(c1, list) and isinstance(c2, dict):
-                return "tuple"
-            else:
-                raise ValueError(
-                    "Corpus must be a list of list of tokens, an object with the `ids` and `vocab` attributes, or a tuple of two lists: the first list is the list of unique token IDs, and the second list is the list of token IDs for each document."
-                )
-        elif isinstance(corpus, Iterable):
-            if is_list_of_list_of_type(corpus, type_=int):
-                return "token_ids"
-            else:
-                return "tokens"
-        else:
-            raise ValueError(
-                "Corpus must be a list of list of tokens, an object with the `ids` and `vocab` attributes, or a tuple of two lists: the first list is the list of unique token IDs, and the second list is the list of token IDs for each document."
-            )
+        pass
 
     @staticmethod
     def _compute_relevance_from_scores(
@@ -343,93 +318,7 @@ class BM25:
         leave_progress : bool
             If True, the progress bars will remain after the function completes.
         """
-        if self.csc_backend not in ["scipy", "numpy"]:
-            raise ValueError(
-                f"Invalid csc_backend value: {self.csc_backend}. Choose from 'scipy', 'numpy'."
-            )
-
-        avg_doc_len = np.array([len(doc_ids) for doc_ids in corpus_token_ids]).mean()
-        n_docs = len(corpus_token_ids)
-        n_vocab = len(unique_token_ids)
-
-        # Step 1: Calculate the number of documents containing each token
-        doc_frequencies = _calculate_doc_freqs(
-            corpus_tokens=corpus_token_ids,
-            unique_tokens=unique_token_ids,
-            show_progress=show_progress,
-            leave_progress=leave_progress,
-        )
-
-        # preliminary: if the method is one of BM25L or BM25+, we need to calculate the non-occurrence array
-        if self.method in self.methods_requiring_nonoccurrence:
-            self.nonoccurrence_array = _build_nonoccurrence_array(
-                doc_frequencies=doc_frequencies,
-                n_docs=n_docs,
-                compute_idf_fn=_select_idf_scorer(self.idf_method),
-                calculate_tfc_fn=_select_tfc_scorer(self.method),
-                l_d=avg_doc_len,
-                l_avg=avg_doc_len,
-                k1=self.k1,
-                b=self.b,
-                delta=self.delta,
-                dtype=self.dtype,
-            )
-        else:
-            self.nonoccurrence_array = None
-
-        # Step 2: Calculate the idf for each token using the document frequencies
-        idf_array = _build_idf_array(
-            doc_frequencies=doc_frequencies,
-            n_docs=n_docs,
-            compute_idf_fn=_select_idf_scorer(self.idf_method),
-            dtype=self.dtype,
-        )
-
-        # Step 3 Calculate the BM25 scores for each token in each document
-        scores_flat, doc_idx, vocab_idx = _build_scores_and_indices_for_matrix(
-            corpus_token_ids=corpus_token_ids,
-            idf_array=idf_array,
-            avg_doc_len=avg_doc_len,
-            doc_frequencies=doc_frequencies,
-            k1=self.k1,
-            b=self.b,
-            delta=self.delta,
-            show_progress=show_progress,
-            leave_progress=leave_progress,
-            dtype=self.dtype,
-            int_dtype=self.int_dtype,
-            method=self.method,
-            nonoccurrence_array=self.nonoccurrence_array,
-        )
-
-        # Now, we build the sparse matrix
-        if self.csc_backend == "scipy":
-            score_matrix = sp.csc_matrix(
-                (scores_flat, (doc_idx, vocab_idx)),
-                shape=(n_docs, n_vocab),
-                dtype=self.dtype,
-            )
-            data = score_matrix.data
-            indices = score_matrix.indices
-            indptr = score_matrix.indptr
-        elif self.csc_backend == "numpy":
-            data, indices, indptr = self._np_csc(
-                data=scores_flat,
-                rows=doc_idx,
-                cols=vocab_idx,
-                shape=(n_docs, n_vocab),
-            )
-            data = data.astype(self.dtype)
-        else:
-            raise ValueError(f"Invalid csc_backend value: {self.csc_backend}. Choose from 'scipy', 'numpy'.")
-
-        scores = {
-            "data": data,
-            "indices": indices,
-            "indptr": indptr,
-            "num_docs": n_docs,
-        }
-        return scores
+        pass
 
     def build_index_from_tokens(
         self, corpus_tokens, show_progress=True, leave_progress=False
@@ -438,33 +327,7 @@ class BM25:
         Low-level function to build the BM25 index from tokens, used by the `index` method.
         You can override this function if you want to build the index in a different way.
         """
-        unique_tokens = get_unique_tokens(
-            corpus_tokens,
-            show_progress=show_progress,
-            leave_progress=leave_progress,
-            desc="BM25S Create Vocab",
-        )
-        vocab_dict = {token: i for i, token in enumerate(unique_tokens)}
-        unique_token_ids = [vocab_dict[token] for token in unique_tokens]
-
-        corpus_token_ids = [
-            [vocab_dict[token] for token in tokens]
-            for tokens in tqdm(
-                corpus_tokens,
-                desc="BM25S Convert tokens to indices",
-                leave=leave_progress,
-                disable=not show_progress,
-            )
-        ]
-
-        scores = self.build_index_from_ids(
-            unique_token_ids=unique_token_ids,
-            corpus_token_ids=corpus_token_ids,
-            show_progress=show_progress,
-            leave_progress=leave_progress,
-        )
-
-        return scores, vocab_dict
+        pass
 
     def index(
         self,
@@ -508,60 +371,7 @@ class BM25:
         leave_progress : bool
             If True, the progress bars will remain after the function completes.
         """
-        inferred_corpus_obj = self._infer_corpus_object(corpus)
-
-        if inferred_corpus_obj == "tokens":
-            logger.debug(msg="Building index from tokens")
-            scores, vocab_dict = self.build_index_from_tokens(
-                corpus, leave_progress=leave_progress, show_progress=show_progress
-            )
-        else:
-            if inferred_corpus_obj == "tuple":
-                logger.debug(msg="Building index from IDs")
-                corpus_token_ids, vocab_dict = corpus
-            elif inferred_corpus_obj == "object":
-                logger.debug(msg="Building index from IDs objects")
-                corpus_token_ids = corpus.ids
-                vocab_dict = corpus.vocab
-            elif inferred_corpus_obj == "token_ids":
-                # we need to create a vocab_dict from the unique token IDs
-                logger.debug(msg="Building index from token IDs")
-                corpus_token_ids = corpus
-                unique_ids = set()
-                for doc_ids in corpus_token_ids:
-                    unique_ids.update(doc_ids)
-                # if there's allowed empty token, we need to add it to the vocab_dict to either 0 or max+1
-                if create_empty_token:
-                    if 0 not in unique_ids:
-                        unique_ids.add(0)
-                    else:
-                        unique_ids.add(max(unique_ids) + 1)
-                
-                # create the vocab_dict from the unique token IDs
-                vocab_dict = {token_id: i for i, token_id in enumerate(unique_ids)}
-                
-            else:
-                raise ValueError(
-                    "Internal error: Found an invalid corpus object, indicating `_inferred_corpus_object` is not working correctly."
-                )
-
-            unique_token_ids = list(vocab_dict.values())
-            scores = self.build_index_from_ids(
-                unique_token_ids=unique_token_ids,
-                corpus_token_ids=corpus_token_ids,
-                leave_progress=leave_progress,
-                show_progress=show_progress,
-            )
-
-        if create_empty_token:
-            if inferred_corpus_obj != "token_ids" and "" not in vocab_dict:
-                vocab_dict[""] = max(vocab_dict.values()) + 1
-
-        self.scores = scores
-        self.vocab_dict = vocab_dict
-
-        # we create unique token IDs from the vocab_dict for faster lookup
-        self.unique_token_ids_set = set(self.vocab_dict.values())
+        pass
 
     def get_tokens_ids(self, query_tokens: List[str]) -> List[int]:
         """
@@ -575,61 +385,12 @@ class BM25:
     def get_scores_from_ids(
         self, query_tokens_ids: List[int], weight_mask=None
     ) -> np.ndarray:
-        data = self.scores["data"]
-        indices = self.scores["indices"]
-        indptr = self.scores["indptr"]
-        num_docs = self.scores["num_docs"]
-
-        dtype = np.dtype(self.dtype)
-        int_dtype = np.dtype(self.int_dtype)
-        query_tokens_ids: np.ndarray = np.asarray(query_tokens_ids, dtype=int_dtype)
-
-        max_token_id = int(query_tokens_ids.max(initial=0))
-
-        if max_token_id >= len(indptr) - 1:
-            raise ValueError(
-                f"The maximum token ID in the query ({max_token_id}) is higher than the number of tokens in the index."
-                "This likely means that the query contains tokens that are not in the index."
-            )
-
-        scores = self._compute_relevance_from_scores(
-            data=data,
-            indptr=indptr,
-            indices=indices,
-            num_docs=num_docs,
-            query_tokens_ids=query_tokens_ids,
-            dtype=np.dtype(dtype),
-        )
-
-        if weight_mask is not None:
-            # multiply the scores by the weight mask
-            scores *= weight_mask
-
-        # if there's a non-occurrence array, we need to add the non-occurrence score
-        # back to the scores
-        if self.nonoccurrence_array is not None:
-            nonoccurrence_scores = self.nonoccurrence_array[query_tokens_ids].sum()
-            scores += nonoccurrence_scores
-
-        return scores
+        pass
 
     def get_scores(
         self, query_tokens_single: List[str], weight_mask=None
     ) -> np.ndarray:
-        if not isinstance(query_tokens_single, list):
-            raise ValueError("The query_tokens must be a list of tokens.")
-
-        if isinstance(query_tokens_single[0], str):
-            query_tokens_ids = self.get_tokens_ids(query_tokens_single)
-        elif isinstance(query_tokens_single[0], int):
-            # already are token IDs, no need to convert
-            query_tokens_ids = query_tokens_single
-        else:
-            raise ValueError(
-                "The query_tokens must be a list of tokens or a list of token IDs."
-            )
-
-        return self.get_scores_from_ids(query_tokens_ids, weight_mask=weight_mask)
+        pass
 
     def _get_top_k_results(
         self,
@@ -644,28 +405,7 @@ class BM25:
         Since it's a hidden function, the user should not call it directly and
         may change in the future. Please use the `retrieve` function instead.
         """
-        if len(query_tokens_single) == 0:
-            logger.info(
-                msg="The query is empty. This will result in a zero score for all documents."
-            )
-            scores_q = np.zeros(self.scores["num_docs"], dtype=self.dtype)
-        else:
-            scores_q = self.get_scores(query_tokens_single, weight_mask=weight_mask)
-
-        if backend.startswith("numba"):
-            if NUMBA_AVAILABLE is False:
-                raise ImportError(
-                    "Numba is not installed. Please install numba to use the numba backend."
-                )
-            topk_scores, topk_indices = selection_jit.topk(
-                scores_q, k=k, sorted=sorted, backend=backend
-            )
-        else:
-            topk_scores, topk_indices = selection_np.topk(
-                scores_q, k=k, sorted=sorted, backend=backend
-            )
-
-        return topk_scores, topk_indices
+        pass
 
     def retrieve(
         self,

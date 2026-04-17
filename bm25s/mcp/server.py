@@ -38,7 +38,7 @@ def create_mcp_server(index_dir: str, port: int = 8000):
         """
         Get information about the loaded index.
         """
-        return f"BM25S Index Info:\n- Vocab Size: {len(retriever.vocab_dict)}\n- Num Docs: {retriever.scores['num_docs']}\n- Backend: {retriever.backend}"
+        pass
 
     return mcp
 

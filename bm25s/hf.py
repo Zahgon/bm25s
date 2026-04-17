@@ -15,7 +15,7 @@ except ImportError:
     )
 
 def _faketqdm(*args, **kwargs):
-    return args[0] if len(args) > 0 else None
+    pass
 try:
     if os.environ.get("DISABLE_TQDM", False):
         tqdm = _faketqdm
@@ -185,21 +185,7 @@ To cite `bm25s`, please use the following bibtex:
 
 
 def batch_tokenize(tokenizer, texts, add_special_tokens=False):
-    tokenizer_kwargs = dict(
-        return_attention_mask=False,
-        return_token_type_ids=False,
-        add_special_tokens=add_special_tokens,
-        max_length=None,
-    )
-    tokenized = tokenizer(texts, **tokenizer_kwargs)
-    output = []
-
-    for i in tqdm(
-        range(len(texts)), desc="Processing tokens (huggingface tokenizer)", leave=False
-    ):
-        output.append(tokenized[i].tokens)
-
-    return output
+    pass
 
 
 def is_dir_empty(local_save_dir):
@@ -216,9 +202,7 @@ def is_dir_empty(local_save_dir):
     bool
         True if the directory is empty, False otherwise.
     """
-    if not os.path.exists(local_save_dir):
-        return True
-    return len(os.listdir(local_save_dir)) == 0
+    pass
 
 
 def can_save_locally(local_save_dir, overwrite_local: bool) -> bool:
@@ -238,17 +222,7 @@ def can_save_locally(local_save_dir, overwrite_local: bool) -> bool:
     bool
         True if it is possible to save the model to the local directory, False otherwise.
     """
-    # if local_save_dir is None, we cannot save locally
-    if local_save_dir is None:
-        return False
-
-    # if the directory is empty, we can save locally
-    if is_dir_empty(local_save_dir):
-        return True
-
-    # if we are allowed to overwrite the directory, we can save locally
-    if overwrite_local:
-        return True
+    pass
 
 
 class TokenizerHF(Tokenizer):
@@ -288,39 +262,7 @@ class TokenizerHF(Tokenizer):
         kwargs: dict
             Additional keyword arguments to pass to `HfApi.upload_folder` call.
         """
-        api = HfApi(token=token)
-        repo_url = api.create_repo(
-            repo_id=repo_id,
-            token=api.token,
-            private=private,
-            repo_type="model",
-            exist_ok=True,
-        )
-        repo_id = repo_url.repo_id
-
-        saving_locally = can_save_locally(local_dir, overwrite_local)
-        if saving_locally:
-            os.makedirs(local_dir, exist_ok=True)
-            save_dir = local_dir
-        else:
-            # save to a temporary directory otherwise
-            save_dir = tempfile.mkdtemp()
-
-        self.save_vocab(save_dir)
-        # push content of the temporary directory to the repo
-        api.upload_folder(
-            repo_id=repo_id,
-            commit_message=commit_message,
-            token=api.token,
-            folder_path=save_dir,
-            repo_type=repo_url.repo_type,
-            **kwargs,
-        )
-        # delete the temporary directory if it was created
-        if not saving_locally:
-            shutil.rmtree(save_dir)
-
-        return repo_url
+        pass
     
     def load_vocab_from_hub(
         cls,
@@ -350,19 +292,7 @@ class TokenizerHF(Tokenizer):
         allow_pickle: bool
             Whether to allow pickling the model. Default is False.
         """
-        api = HfApi(token=token)
-        # check if the model exists
-        repo_url = api.repo_info(repo_id)
-        if repo_url is None:
-            raise ValueError(f"Model {repo_id} not found on the Hugging Face Hub.")
-
-        snapshot = api.snapshot_download(
-            repo_id=repo_id, revision=revision, token=token, local_dir=local_dir
-        )
-        if snapshot is None:
-            raise ValueError(f"Model {repo_id} not found on the Hugging Face Hub.")
-
-        return cls.load_vocab(save_dir=snapshot)
+        pass
 
     def save_stopwords_to_hub(
         self,
@@ -400,39 +330,7 @@ class TokenizerHF(Tokenizer):
         kwargs: dict
             Additional keyword arguments to pass to `HfApi.upload_folder` call.
         """
-        api = HfApi(token=token)
-        repo_url = api.create_repo(
-            repo_id=repo_id,
-            token=api.token,
-            private=private,
-            repo_type="model",
-            exist_ok=True,
-        )
-        repo_id = repo_url.repo_id
-
-        saving_locally = can_save_locally(local_dir, overwrite_local)
-        if saving_locally:
-            os.makedirs(local_dir, exist_ok=True)
-            save_dir = local_dir
-        else:
-            # save to a temporary directory otherwise
-            save_dir = tempfile.mkdtemp()
-
-        self.save_stopwords(save_dir)
-        # push content of the temporary directory to the repo
-        api.upload_folder(
-            repo_id=repo_id,
-            commit_message=commit_message,
-            token=api.token,
-            folder_path=save_dir,
-            repo_type=repo_url.repo_type,
-            **kwargs,
-        )
-        # delete the temporary directory if it was created
-        if not saving_locally:
-            shutil.rmtree(save_dir)
-
-        return repo_url
+        pass
     
     def load_stopwords_from_hub(
         self,
@@ -459,19 +357,7 @@ class TokenizerHF(Tokenizer):
         local_dir: str
             The local dir where the model will be stored after downloading.
         """
-        api = HfApi(token=token)
-        # check if the model exists
-        repo_url = api.repo_info(repo_id)
-        if repo_url is None:
-            raise ValueError(f"Model {repo_id} not found on the Hugging Face Hub.")
-
-        snapshot = api.snapshot_download(
-            repo_id=repo_id, revision=revision, token=token, local_dir=local_dir
-        )
-        if snapshot is None:
-            raise ValueError(f"Model {repo_id} not found on the Hugging Face Hub.")
-
-        return self.load_stopwords(save_dir=snapshot)
+        pass
 
 class BM25HF(BM25):
     def save_to_hub(
@@ -530,64 +416,7 @@ class BM25HF(BM25):
         kwargs: dict
             Additional keyword arguments to pass to `HfApi.upload_folder` call.
         """
-        api = HfApi(token=token)
-        repo_url = api.create_repo(
-            repo_id=repo_id,
-            token=api.token,
-            private=private,
-            repo_type="model",
-            exist_ok=True,
-        )
-        repo_id = repo_url.repo_id
-
-        username, repo_name = repo_id.split("/", 1)
-
-        saving_locally = can_save_locally(local_dir, overwrite_local)
-        if saving_locally:
-            os.makedirs(local_dir, exist_ok=True)
-            save_dir = local_dir
-        else:
-            # save to a temporary directory otherwise
-            save_dir = tempfile.mkdtemp()
-
-        self.save(save_dir, corpus=corpus, allow_pickle=allow_pickle)
-        # if we include the README, write it to the directory
-        if include_readme:
-            num_docs = self.scores["num_docs"]
-            num_tokens = self.scores["data"].shape[0]
-            avg_tokens_per_doc = round(num_tokens / num_docs, 2)
-
-            results = README_TEMPLATE.format(
-                username=username,
-                version=__version__,
-                repo_name=repo_name,
-                num_docs=num_docs,
-                num_tokens=num_tokens,
-                avg_tokens_per_doc=avg_tokens_per_doc,
-                k1=self.k1,
-                b=self.b,
-                delta=self.delta,
-                method=self.method,
-                idf_method=self.idf_method,
-            )
-
-            with open(os.path.join(save_dir, "README.md"), "w") as f:
-                f.write(results)
-
-        # push content of the temporary directory to the repo
-        api.upload_folder(
-            repo_id=repo_id,
-            commit_message=commit_message,
-            token=api.token,
-            folder_path=save_dir,
-            repo_type=repo_url.repo_type,
-            **kwargs,
-        )
-        # delete the temporary directory if it was created
-        if not saving_locally:
-            shutil.rmtree(save_dir)
-
-        return repo_url
+        pass
 
     @classmethod
     def load_from_hub(
@@ -628,21 +457,4 @@ class BM25HF(BM25):
         allow_pickle: bool
             Whether to allow pickling the model. Default is False.
         """
-        api = HfApi(token=token)
-        # check if the model exists
-        repo_url = api.repo_info(repo_name)
-        if repo_url is None:
-            raise ValueError(f"Model {repo_name} not found on the Hugging Face Hub.")
-
-        snapshot = api.snapshot_download(
-            repo_name, revision=revision, token=token, local_dir=local_dir
-        )
-        if snapshot is None:
-            raise ValueError(f"Model {repo_name} not found on the Hugging Face Hub.")
-
-        return cls.load(
-            save_dir=snapshot,
-            load_corpus=load_corpus,
-            mmap=mmap,
-            allow_pickle=allow_pickle,
-        )
+        pass

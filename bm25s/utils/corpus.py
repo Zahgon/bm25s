@@ -11,7 +11,7 @@ except ImportError:
 
 
 def _faketqdm(*args, **kwargs):
-    return args[0] if len(args) > 0 else None
+    pass
 try:
     if os.environ.get("DISABLE_TQDM", False):
         tqdm = _faketqdm
@@ -62,10 +62,7 @@ def save_mmindex(indexes, path, encoding="utf-8"):
 
 
 def load_mmindex(path, encoding="utf-8"):
-    path = str(path)
-    index_file = change_extension(path, ".mmindex.json")
-    with open(index_file, "r", encoding=encoding) as f:
-        return json_functions.loads(f.read())
+    pass
 
 
 # now we can jump to any line in the file thanks to the index and mmap
@@ -77,29 +74,7 @@ def get_line(
     file_obj=None,
     mmap_obj=None,
 ) -> str:
-    path = str(path)
-    if file_obj is None:
-        file_obj = open(path, "r", encoding=encoding)
-        CLOSE_FILE = True
-    else:
-        CLOSE_FILE = False
-
-    if mmap_obj is None:
-        mmap_obj = mmap.mmap(file_obj.fileno(), 0, access=mmap.ACCESS_READ)
-        CLOSE_MMAP = True
-    else:
-        CLOSE_MMAP = False
-
-    mmap_obj.seek(mmindex[index])
-    result = mmap_obj.readline().decode(encoding)
-
-    if CLOSE_MMAP:
-        mmap_obj.close()
-
-    if CLOSE_FILE:
-        file_obj.close()
-
-    return result
+    pass
 
 
 class JsonlCorpus:

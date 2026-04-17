@@ -8,7 +8,7 @@ import os
 from bm25s.utils import json_functions
 
 def _faketqdm(*args, **kwargs):
-    return args[0] if len(args) > 0 else None
+    pass
 try:
     if os.environ.get("DISABLE_TQDM", False):
         tqdm = _faketqdm
@@ -175,10 +175,7 @@ class Tokenizer:
         Reset the vocabulary dictionaries to empty dictionaries, allowing you to
         tokenize a new set of texts without reusing the previous vocabulary.
         """
-        self.word_to_stem = {}  # word -> stemmed word, e.g. "apple" -> "appl"
-        self.stem_to_sid = {}  # stem -> stemmed id, e.g. "appl" -> 0
-        # word -> {stemmed, unstemmed} id, e.g. "apple" -> 0 (appl) or "apple" -> 2 (apple)
-        self.word_to_id = {}
+        pass
 
     def save_vocab(self, save_dir: str, vocab_name: str = "vocab.tokenizer.json"):
         """
@@ -225,13 +222,7 @@ class Tokenizer:
         - stem_to_sid: a dictionary mapping stemmed words to their stemmed IDs
         - word_to_id: a dictionary mapping words to their word
         """
-        path = Path(save_dir) / vocab_name
-
-        with open(path, "r", encoding='utf-8') as f:
-            d = json_functions.loads(f.read())
-            self.word_to_stem = d["word_to_stem"]
-            self.stem_to_sid = d["stem_to_sid"]
-            self.word_to_id = d["word_to_id"]
+        pass
     
     def save_stopwords(self, save_dir: str, stopwords_name: str = "stopwords.tokenizer.json"):
         """
@@ -264,10 +255,7 @@ class Tokenizer:
         stopwords_name : str, optional
             The name of the stopwords file.
         """
-        path = Path(save_dir) / stopwords_name
-
-        with open(path, "r", encoding='utf-8') as f:
-            self.stopwords = json_functions.loads(f.read())
+        pass
 
     def streaming_tokenize(
         self, texts: List[str], update_vocab: Union[bool, str] = True, allow_empty: bool = True

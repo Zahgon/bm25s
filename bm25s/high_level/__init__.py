@@ -171,7 +171,7 @@ class BM25Search:
 
 
 def index(documents, language: str = "english"):
-    return BM25Search(corpus=documents, language=language)
+    pass
 
 
 def load(path, document_column=None):
